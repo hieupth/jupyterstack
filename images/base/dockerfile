@@ -1,8 +1,6 @@
-ARG MAMBA_NAME=mamba
-ARG CUDA_NAME=-cu118
-ARG CUDA_RUNTIME=-devel
+ARG IMAGE_TAG
 
-FROM hieupth/mamba:${MAMBA_NAME}${CUDA_NAME}${CUDA_RUNTIME}
+FROM hieupth/mamba:${IMAGE_TAG}
 
 ARG NB_USER="jovyan"
 # UID 1000 is already associated with the "mambauser" in the base image
@@ -53,7 +51,7 @@ ENV PATH="${CONDA_DIR}/bin:${PATH}" \
     HOME="/home/${NB_USER}"
 
 # Copy a script that we will use to correct permissions after running certain commands
-COPY fix-permissions /usr/local/bin/fix-permissions
+COPY fix-permissions.sh /usr/local/bin/fix-permissions
 RUN chmod a+rx /usr/local/bin/fix-permissions
 
 # Enable prompt color in the skeleton .bashrc before creating the default NB_USER

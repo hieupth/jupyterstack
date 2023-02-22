@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        mamba_name: [mamba, conda]
+        mamba: [mamba, conda]
     steps:
       - 
         name: Set up QEMU
@@ -37,13 +37,11 @@ jobs:
         with:
           push: true
           file: "./images/base/dockerfile"
-          context: "./images/base"
+          context: "./images/base/"
           platforms: linux/amd64,linux/arm64,linux/ppc64le
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:${{ matrix.mamba_name }}-base
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:${{ matrix.mamba }}-base
           build-args: |
-            MAMBA_NAME=${{ matrix.mamba_name }}
-            CUDA_VERSION=""
-            CUDA_RUNTIME=""
+            IMAGE_TAG=${{ matrix.mamba }}
       - 
         name: Update docker description
         uses: peter-evans/dockerhub-description@v2
@@ -56,8 +54,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        mamba_name: [mamba, conda]
-        cuda_version: [-cu112, -cu113, -cu114, -cu115, -cu116, -cu117, -cu118]
+        mamba: [mamba, conda]
+        cuda_runtime: [runtime, devel]
+        cuda_version: [112, 113, 114, 115, 116, 117, 118]
     steps:
       - 
         name: Set up QEMU
@@ -76,16 +75,29 @@ jobs:
       - 
         name: Checkout
         uses: actions/checkout@v2
+      -
+        name: Prepare
+        run: |
+          IMAGE_TAG=${{ matrix.mamba }}-cu${{ matrix.cuda_version }}
+          # -------------------------------------------
+          # Prepare runtime tag.
+          # -------------------------------------------
+          if [ "${{ matrix.cuda_runtime }}" == "devel" ]; then
+            IMAGE_TAG=${IMAGE_TAG}-${{ matrix.cuda_runtime }}
+          fi
+          # -------------------------------------------
+          # Prepare image tags.
+          # -------------------------------------------
+          IMAGE_TAG=${{ matrix.mamba }}
+          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_ENV
       - 
         name: Build Image
         uses: docker/build-push-action@v3
         with:
           push: true
           file: "./images/base/dockerfile"
-          context: "./images/base"
+          context: "./images/base/"
           platforms: linux/amd64,linux/arm64
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:${{ matrix.mamba_name }}${{ matrix.cuda_version }}-base
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:${{ env.image_tag }}-base
           build-args: |
-            MAMBA_NAME=${{ matrix.mamba_name }}
-            CUDA_VERSION=${{ matrix.cuda_version }}
-            CUDA_RUNTIME=""
+            IMAGE_TAG=${{ env.image_tag }}
