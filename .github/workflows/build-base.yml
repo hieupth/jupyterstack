@@ -1,19 +1,19 @@
-name: Build
+name: Build Base Image
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - 'main'
-      - 'dev.base'
-      - 'dev.stack'
+    paths:
+      - images/base
+    schedule:
+      - cron: "0 0 0 ? * SUN *"
 
 jobs:
-  # Build image
+  # CPU image
   build-base:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        mamba: [mamba, conda]
     steps:
       - 
         name: Set up QEMU
@@ -40,33 +40,14 @@ jobs:
           file: "./images/base/dockerfile"
           context: "./images/base/"
           platforms: linux/amd64,linux/arm64,linux/ppc64le
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:${{ matrix.mamba }}-base
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:base
           build-args: |
-            IMAGE_TAG=${{ matrix.mamba }}
-      - 
-        name: Build Stack Image
-        uses: docker/build-push-action@v3
-        with:
-          push: true
-          file: "./images/stack/dockerfile"
-          context: "./images/stack/"
-          platforms: linux/amd64,linux/arm64,linux/ppc64le
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:${{ matrix.mamba }}
-          build-args: |
-            IMAGE_TAG=${{ matrix.mamba }}-base
-      - 
-        name: Update docker description
-        uses: peter-evans/dockerhub-description@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack
-  #
+            IMAGE_TAG=latest
+  # CUDA image
   build-cuda-base:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        mamba: [mamba, conda]
         cuda_runtime: [runtime, devel]
         cuda_version: [112, 113, 114, 115, 116, 117, 118]
     steps:
@@ -90,7 +71,7 @@ jobs:
       -
         name: Prepare
         run: |
-          IMAGE_TAG=${{ matrix.mamba }}-cu${{ matrix.cuda_version }}
+          IMAGE_TAG=cu${{ matrix.cuda_version }}
           # -------------------------------------------
           # Prepare runtime tag.
           # -------------------------------------------
@@ -112,14 +93,3 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:${{ env.image_tag }}-base
           build-args: |
             IMAGE_TAG=${{ env.image_tag }}
-      - 
-        name: Build Stack Image
-        uses: docker/build-push-action@v3
-        with:
-          push: true
-          file: "./images/stack/dockerfile"
-          context: "./images/stack/"
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:${{ env.image_tag }}
-          build-args: |
-            IMAGE_TAG=${{ env.image_tag }}-base
