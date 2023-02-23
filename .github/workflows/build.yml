@@ -5,6 +5,7 @@ on:
     branches:
       - 'main'
       - 'dev.base'
+      - 'dev.stack'
 
 jobs:
   # Build image
@@ -32,7 +33,7 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2
       - 
-        name: Build Image
+        name: Build Base Image
         uses: docker/build-push-action@v3
         with:
           push: true
@@ -42,6 +43,17 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:${{ matrix.mamba }}-base
           build-args: |
             IMAGE_TAG=${{ matrix.mamba }}
+      - 
+        name: Build Stack Image
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          file: "./images/stack/dockerfile"
+          context: "./images/stack/"
+          platforms: linux/amd64,linux/arm64,linux/ppc64le
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:${{ matrix.mamba }}
+          build-args: |
+            IMAGE_TAG=${{ matrix.mamba }}-base
       - 
         name: Update docker description
         uses: peter-evans/dockerhub-description@v2
@@ -90,7 +102,7 @@ jobs:
           # -------------------------------------------
           echo "image_tag=${IMAGE_TAG}" >> $GITHUB_ENV
       - 
-        name: Build Image
+        name: Build Base Image
         uses: docker/build-push-action@v3
         with:
           push: true
@@ -100,3 +112,14 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:${{ env.image_tag }}-base
           build-args: |
             IMAGE_TAG=${{ env.image_tag }}
+      - 
+        name: Build Stack Image
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          file: "./images/stack/dockerfile"
+          context: "./images/stack/"
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:${{ env.image_tag }}
+          build-args: |
+            IMAGE_TAG=${{ env.image_tag }}-base
