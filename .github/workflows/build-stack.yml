@@ -6,7 +6,7 @@ on:
     branches:
       - 'main'
     paths:
-      - images/stack
+      - images/stack/*
   workflow_run:
     workflows: ["Build Base Image"]
     types:
@@ -41,7 +41,7 @@ jobs:
           push: true
           file: "./images/stack/dockerfile"
           context: "./images/stack/"
-          platforms: linux/amd64,linux/arm64,linux/ppc64le
+          platforms: linux/amd64,linux/arm64
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack
           build-args: |
             IMAGE_TAG=base
