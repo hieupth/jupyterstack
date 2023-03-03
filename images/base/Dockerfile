@@ -21,6 +21,7 @@ RUN apt-get update --yes && \
     apt-get install --yes --no-install-recommends \
         sudo \
         wget \
+        tini \
         # Install fd to improve chown performance with CHOWN_HOME_EXCLUDE option
         fd-find \
         locales \
@@ -63,21 +64,21 @@ RUN echo "auth requisite pam_deny.so" >> /etc/pam.d/su && \
     chmod g+w /etc/passwd && \
     fix-permissions "${HOME}" && \
     fix-permissions "${CONDA_DIR}"
-
+#
 USER ${NB_UID}
 # Pin python version here, or set it to "default"
 ARG PYTHON_VERSION=3.10
 # Setup work directory for backward-compatibility
 RUN mkdir "/home/${NB_USER}/work" && \
     fix-permissions "/home/${NB_USER}"
-
 # Configure container startup
 ENTRYPOINT ["tini", "-g", "--"]
 CMD ["start.sh"]
-
+#
 USER root
 # Copy local files as late as possible to avoid cache busting
 COPY start.sh /usr/local/bin/start.sh
+RUN chmod a+rx /usr/local/bin/start.sh
 # Switch back to jovyan to avoid accidental container runs as root
 USER ${NB_UID}
 # Switch work directory

@@ -6,7 +6,7 @@ on:
     branches:
       - 'main'
     paths:
-      - images/base
+      - images/base/*
     schedule:
       - cron: "0 0 0 ? * SUN *"
 
@@ -37,7 +37,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          file: "./images/base/dockerfile"
+          file: "./images/base/Dockerfile"
           context: "./images/base/"
           platforms: linux/amd64,linux/arm64,linux/ppc64le
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:base
@@ -87,8 +87,8 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          file: "./images/base/dockerfile"
-          context: "./images/base/"
+          file: "images/base/Dockerfile"
+          context: "images/base"
           platforms: linux/amd64,linux/arm64
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:${{ env.image_tag }}-base
           build-args: |

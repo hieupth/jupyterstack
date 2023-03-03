@@ -39,8 +39,8 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          file: "./images/stack/dockerfile"
-          context: "./images/stack/"
+          file: "images/stack/Dockerfile"
+          context: "images/stack"
           platforms: linux/amd64,linux/arm64
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack
           build-args: |
@@ -89,8 +89,8 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          file: "./images/stack/dockerfile"
-          context: "./images/stack/"
+          file: "images/stack/Dockerfile"
+          context: "images/stack"
           platforms: linux/amd64,linux/arm64
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/jupyterstack:${{ env.image_tag }}
           build-args: |
